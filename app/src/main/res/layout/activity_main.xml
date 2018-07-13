@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ListView
+        android:id="@+id/dispLista"
+        android:choiceMode="singleChoice"
+        android:layout_width="match_parent"
+        android:layout_height="505dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="6dp" />
+
+    <com.example.nobod.filmdig.AutoFitTextureView
+        android:id="@+id/texture"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="91dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:background="@color/colorPrimaryDark"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_alignParentTop="true"
+            android:layout_height="38dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/luz"
+                android:layout_width="116dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="Liga Luz" />
+
+            <CheckBox
+                android:id="@+id/continuo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="CheckBox" />
+
+            <Button
+                android:id="@+id/LigarBT"
+                android:layout_width="117dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="Ligar BT" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/tras"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:contentDescription="Um Frame para trás"
+                android:text="Atras"
+                android:clickable="true"
+                android:onClick="on" />
+
+            <Button
+                android:id="@+id/picture"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/app_name"
+                />
+
+            <Button
+                android:id="@+id/frente"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:onClick="visible"
+                android:contentDescription="Desloca um frame para a frente"
+                android:text="Frente" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</RelativeLayout>
+
+    <!-- Com esta merda deste codigo funciona... Não sei porquê
+
+
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+android:layout_width="match_parent"
+android:layout_height="match_parent">
+
+<com.example.nobod.filmdig.AutoFitTextureView
+    android:id="@+id/texture"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_alignParentStart="true"
+    android:layout_alignParentTop="true" />
+
+<FrameLayout
+    android:id="@+id/control"
+    android:layout_width="match_parent"
+    android:layout_height="112dp"
+    android:layout_alignParentBottom="true"
+    android:layout_alignParentStart="true"
+>
+
+    <Button
+        android:id="@+id/picture"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="@string/app_name" />
+
+    <ImageButton
+        android:id="@+id/info"
+        android:contentDescription="@string/app_name"
+        style="@android:style/Widget.Material.Light.Button.Borderless"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|right"
+        android:padding="20dp"
+        android:src="@drawable/ic_launcher_background" />
+
+</FrameLayout>
+
+</RelativeLayout>
+
+    -->
