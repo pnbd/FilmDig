@@ -83,6 +83,14 @@
 
     </LinearLayout>
 
+    <Spinner
+        android:id="@+id/listaBts"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:layout_weight="1" />
+
 </RelativeLayout>
 
     <!-- Com esta merda deste codigo funciona... Não sei porquê
