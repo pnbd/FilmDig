@@ -72,6 +72,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Delayed;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -241,7 +242,7 @@ public class Camera2BasicFragment extends Fragment
 
     /**
      * This a callback object for the {@link ImageReader}. "onImageAvailable" will be called when a
-     * still image is ready to be saved.
+     * still image is ready to be saved. E envia comando para próximo frame
      */
     private final ImageReader.OnImageAvailableListener mOnImageAvailableListener
             = new ImageReader.OnImageAvailableListener() {
@@ -592,7 +593,7 @@ public class Camera2BasicFragment extends Fragment
                                            @NonNull int[] grantResults) {
         if (requestCode == REQUEST_CAMERA_PERMISSION) {
             if (grantResults.length != 1 || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                ErrorDialog.newInstance("Deu Merda")
+                ErrorDialog.newInstance("Erro nas Permicoes")
                         .show(getChildFragmentManager(), FRAGMENT_DIALOG);
             }
         } else {
@@ -710,7 +711,7 @@ public class Camera2BasicFragment extends Fragment
         } catch (NullPointerException e) {
             // Currently an NPE is thrown when the Camera2API is used but not supported on the
             // device this code runs.
-            ErrorDialog.newInstance("Deu Merda outra vez")
+            ErrorDialog.newInstance("Erro nos Camera Outputs")
                     .show(getChildFragmentManager(), FRAGMENT_DIALOG);
         }
     }
@@ -825,7 +826,7 @@ public class Camera2BasicFragment extends Fragment
                                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                                         CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
                                 // Flash is automatically enabled when necessary.
-                                setAutoFlash(mPreviewRequestBuilder);
+                                //setAutoFlash(mPreviewRequestBuilder);
 
                                 // Finally, we start displaying the camera preview.
                                 mPreviewRequest = mPreviewRequestBuilder.build();
@@ -941,7 +942,7 @@ public class Camera2BasicFragment extends Fragment
             // Use the same AE and AF modes as the preview.
             captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                     CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-            setAutoFlash(captureBuilder);
+            //setAutoFlash(captureBuilder);
 
             // Orientation
             int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
@@ -991,7 +992,7 @@ public class Camera2BasicFragment extends Fragment
             // Reset the auto-focus trigger
             mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
                     CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
-            setAutoFlash(mPreviewRequestBuilder);
+            //setAutoFlash(mPreviewRequestBuilder);
             mCaptureSession.capture(mPreviewRequestBuilder.build(), mCaptureCallback,
                     mBackgroundHandler);
             // After this, the camera will go back to the normal state of preview.
@@ -1005,28 +1006,45 @@ public class Camera2BasicFragment extends Fragment
 
     @Override
     public void onClick(View view) {
-        boolean state = MainActivity.getStartStop();
         if(view.getId() == R.id.picture){
-            digitaliza(!state);
-            MainActivity.setStartStop(!state);
+            if(MainActivity.getStartStop() == false){
+                digitaliza(true);
+                MainActivity.setStartStop(true);
+            }else {
+                MainActivity.setStartStop(false);
+            }
+
         }
     }
 
     private void digitaliza(boolean t){
-        while(t == true){
+        if(t == true){
             takePicture();
             MainActivity.incrementI();
             mFile = new File(getActivity().getExternalFilesDir(null), "pic"+MainActivity.getI()+".jpg");
 
+            mBackgroundHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if(mConnectedThread != null){
+                        mConnectedThread.write("1");
+                    }
+                    if(MainActivity.getStartStop()==true) digitaliza(true);
+                    else digitaliza(false);
+                }
+            }, 2500);
+
+
         }
+
     }
 
-    private void setAutoFlash(CaptureRequest.Builder requestBuilder) {
+    /*private void setAutoFlash(CaptureRequest.Builder requestBuilder) {
         if (mFlashSupported) {
             requestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
                     CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
         }
-    }
+    }*/
 
     /**
      * Saves a JPEG {@link Image} into the specified {@link File}.
