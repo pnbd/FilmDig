@@ -7,10 +7,4 @@
     android:background="#000"
     tools:context="com.example.nobod.filmdig.MainActivity" >
 
-    <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:onClick="sendMessage"
-        android:text="Button" />
 </FrameLayout>

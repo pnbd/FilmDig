@@ -7,6 +7,29 @@ import android.view.View;
 
 
 public class MainActivity extends AppCompatActivity {
+    //incremento para nome da foto
+    private static int i = 0;
+
+    public static int getI(){
+        return i;
+    }
+
+    public static void incrementI(){
+        i++;
+    }
+
+    public static boolean getStartStop() {
+        return startStop;
+    }
+
+    public static void setStartStop(boolean startStop) {
+        MainActivity.startStop = startStop;
+    }
+
+    public static boolean startStop = false;
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -19,10 +42,4 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-
-    public void sendMessage(View view){
-        Intent intent = new Intent(this, DisplayMessageActivity.class);
-        startActivity(intent);
-    }
-
 }
