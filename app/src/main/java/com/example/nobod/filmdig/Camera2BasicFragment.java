@@ -17,8 +17,10 @@ import android.content.res.Configuration;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
+import android.hardware.Sensor;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -28,6 +30,7 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
+import android.hardware.camera2.params.MeteringRectangle;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
@@ -48,7 +51,6 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -62,7 +64,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -70,16 +72,21 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.Delayed;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+
+import static android.hardware.camera2.CameraMetadata.CONTROL_AE_ANTIBANDING_MODE_50HZ;
+import static android.hardware.camera2.CameraMetadata.CONTROL_AE_ANTIBANDING_MODE_60HZ;
 
 
 public class Camera2BasicFragment extends Fragment
         implements View.OnClickListener, ActivityCompat.OnRequestPermissionsResultCallback {
 
+    //Cria campo de foco e auto exposição
+    private static final MeteringRectangle[] campo = new MeteringRectangle[]{new MeteringRectangle(850,850,1000,1000,MeteringRectangle.METERING_WEIGHT_DONT_CARE)};
     /**
      * Conversion from screen rotation to JPEG orientation.
      */
@@ -499,7 +506,7 @@ public class Camera2BasicFragment extends Fragment
 
         if (mBTArrayAdapter == null) {
             // Device does not support Bluetooth
-           // mBluetoothStatus.setText("Status: Bluetooth not found");
+            // mBluetoothStatus.setText("Status: Bluetooth not found");
             Toast.makeText(view.getContext(),"Bluetooth device not found!",Toast.LENGTH_SHORT).show();
         }
         else {
@@ -540,13 +547,22 @@ public class Camera2BasicFragment extends Fragment
                 @Override
                 public void onClick(View v){
                     if(mConnectedThread != null) //First check to make sure thread created
-                        mConnectedThread.write("4");
+                        if(MainActivity.isContinuo()== false) {
+                            mConnectedThread.write("4");
+                            MainActivity.setContinuo(true);
+
+                        }else{
+                            mConnectedThread.write("5");
+                            MainActivity.setContinuo(false);
+                        }
                 }
             });
 
 
         }
     }
+
+
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -822,9 +838,12 @@ public class Camera2BasicFragment extends Fragment
                             // When the session is ready, we start displaying the preview.
                             mCaptureSession = cameraCaptureSession;
                             try {
+                                //mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_ANTIBANDING_MODE, CONTROL_AE_ANTIBANDING_MODE_50HZ);
+                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_REGIONS, campo);
+                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS, campo);
                                 // Auto focus should be continuous for camera preview.
                                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
-                                        CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+                                        CameraMetadata.CONTROL_AF_MODE_AUTO);
                                 // Flash is automatically enabled when necessary.
                                 //setAutoFlash(mPreviewRequestBuilder);
 
@@ -915,6 +934,7 @@ public class Camera2BasicFragment extends Fragment
             // This is how to tell the camera to trigger.
             mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER,
                     CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER_START);
+
             // Tell #mCaptureCallback to wait for the precapture sequence to be set.
             mState = STATE_WAITING_PRECAPTURE;
             mCaptureSession.capture(mPreviewRequestBuilder.build(), mCaptureCallback,
@@ -939,6 +959,11 @@ public class Camera2BasicFragment extends Fragment
                     mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
             captureBuilder.addTarget(mImageReader.getSurface());
 
+            //mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_ANTIBANDING_MODE, CONTROL_AE_ANTIBANDING_MODE_50HZ);
+
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_REGIONS, campo);
+
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS, campo);
             // Use the same AE and AF modes as the preview.
             captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                     CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
@@ -1029,10 +1054,10 @@ public class Camera2BasicFragment extends Fragment
                     if(mConnectedThread != null){
                         mConnectedThread.write("1");
                     }
-                    if(MainActivity.getStartStop()==true) digitaliza(true);
-                    else digitaliza(false);
                 }
             }, 2500);
+            if(MainActivity.getStartStop()==true) digitaliza(true);
+            else digitaliza(false);
 
 
         }
@@ -1294,7 +1319,7 @@ public class Camera2BasicFragment extends Fragment
                             fail = true;
                             mBTSocket.close();
                             //mHandler.obtainMessage(CONNECTING_STATUS, -1, -1)
-                                    //.sendToTarget();
+                            //.sendToTarget();
                         } catch (IOException e2) {
                             //insert code to deal with this
                             Toast.makeText(getView().getContext(), "Socket creation failed", Toast.LENGTH_SHORT).show();
@@ -1305,7 +1330,7 @@ public class Camera2BasicFragment extends Fragment
                         mConnectedThread.start();
 
                         //mHandler.obtainMessage(CONNECTING_STATUS, 1, -1, name)
-                                //.sendToTarget();
+                        //.sendToTarget();
                     }
                 }
             }.start();
@@ -1382,8 +1407,5 @@ public class Camera2BasicFragment extends Fragment
             } catch (IOException e) { }
         }
     }
-
-
-
 
 }

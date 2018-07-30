@@ -18,6 +18,16 @@ public class MainActivity extends AppCompatActivity {
         i++;
     }
 
+    public static boolean isContinuo() {
+        return continuo;
+    }
+
+    public static void setContinuo(boolean continuo) {
+        MainActivity.continuo = continuo;
+    }
+
+    public static boolean continuo = false;
+
     public static boolean getStartStop() {
         return startStop;
     }
