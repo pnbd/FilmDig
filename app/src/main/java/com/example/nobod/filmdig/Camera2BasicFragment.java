@@ -85,8 +85,12 @@ import static android.hardware.camera2.CameraMetadata.CONTROL_AE_ANTIBANDING_MOD
 public class Camera2BasicFragment extends Fragment
         implements View.OnClickListener, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    //Cria campo de foco e auto exposição
-    private static final MeteringRectangle[] campo = new MeteringRectangle[]{new MeteringRectangle(850,850,1000,1000,MeteringRectangle.METERING_WEIGHT_DONT_CARE)};
+    //Cria Rectangulo da imagem que queremos
+    //private  static final Rect centro = new Rect((MainActivity.getWindWidth()/2)-(MainActivity.getWindWidth()/6),(MainActivity.getWindHeight()/2)-(MainActivity.getWindHeight()/6),(MainActivity.getWindWidth()/2)+(MainActivity.getWindWidth()/6),(MainActivity.getWindHeight()/2)+(MainActivity.getWindHeight()/6));
+    private  static final Rect centro = new Rect(756,1080,1692,2160);
+    //Cria campo de foco e auto exposição(o não comentado não foca, sabe deus porquê... o outro funciona, sabe deus porquê)
+    //private static final MeteringRectangle[] campo = new MeteringRectangle[]{new MeteringRectangle((850,850,1000,1000,MeteringRectangle.MeteringRectangle.METERING_WEIGHT_DONT_CARE)};
+    //private static final MeteringRectangle[] campo = new MeteringRectangle[]{new MeteringRectangle((MainActivity.getWindWidth()/2)-(MainActivity.getWindWidth()/6),(MainActivity.getWindHeight()/2)-(MainActivity.getWindHeight()/6),100,100,MeteringRectangle.METERING_WEIGHT_MAX)};
     /**
      * Conversion from screen rotation to JPEG orientation.
      */
@@ -483,6 +487,7 @@ public class Camera2BasicFragment extends Fragment
 
 
 
+
         /*mHandler = new Handler(){
             public void handleMessage(android.os.Message msg){
                 if(msg.what == MESSAGE_READ){
@@ -524,6 +529,7 @@ public class Camera2BasicFragment extends Fragment
                 public void onClick(View v){
                     if(mConnectedThread != null) //First check to make sure thread created
                         mConnectedThread.write("1");
+                    Toast.makeText(view.getContext(),"width"+MainActivity.getWindWidth()+" height"+MainActivity.getWindHeight(),Toast.LENGTH_SHORT).show();
                 }
             });
 
@@ -551,7 +557,8 @@ public class Camera2BasicFragment extends Fragment
                             mConnectedThread.write("4");
                             MainActivity.setContinuo(true);
 
-                        }else{
+                        }
+                        else{
                             mConnectedThread.write("5");
                             MainActivity.setContinuo(false);
                         }
@@ -839,8 +846,9 @@ public class Camera2BasicFragment extends Fragment
                             mCaptureSession = cameraCaptureSession;
                             try {
                                 //mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_ANTIBANDING_MODE, CONTROL_AE_ANTIBANDING_MODE_50HZ);
-                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_REGIONS, campo);
-                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS, campo);
+                                mPreviewRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, centro);
+                                //mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_REGIONS, campo);
+                                //mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS, campo);
                                 // Auto focus should be continuous for camera preview.
                                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                                         CameraMetadata.CONTROL_AF_MODE_AUTO);
@@ -960,10 +968,9 @@ public class Camera2BasicFragment extends Fragment
             captureBuilder.addTarget(mImageReader.getSurface());
 
             //mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_ANTIBANDING_MODE, CONTROL_AE_ANTIBANDING_MODE_50HZ);
-
-            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_REGIONS, campo);
-
-            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS, campo);
+            mPreviewRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, centro);
+            //mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_REGIONS, campo);
+            //mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS, campo);
             // Use the same AE and AF modes as the preview.
             captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                     CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
@@ -1042,26 +1049,24 @@ public class Camera2BasicFragment extends Fragment
         }
     }
 
-    private void digitaliza(boolean t){
-        if(t == true){
-            takePicture();
-            MainActivity.incrementI();
-            mFile = new File(getActivity().getExternalFilesDir(null), "pic"+MainActivity.getI()+".jpg");
+    private void digitaliza(boolean t) {
+        if (t == true) {
+            if (mConnectedThread != null) {
+                mConnectedThread.write("1");
+                mFile = new File(getActivity().getExternalFilesDir(null), "pic" + MainActivity.getI() + ".jpg");
 
-            mBackgroundHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if(mConnectedThread != null){
-                        mConnectedThread.write("1");
+                mBackgroundHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        takePicture();
+                        MainActivity.incrementI();
+                        digitaliza(MainActivity.getStartStop());
+
                     }
-                }
-            }, 2500);
-            if(MainActivity.getStartStop()==true) digitaliza(true);
-            else digitaliza(false);
+                }, 5000);
 
-
+            }
         }
-
     }
 
     /*private void setAutoFlash(CaptureRequest.Builder requestBuilder) {

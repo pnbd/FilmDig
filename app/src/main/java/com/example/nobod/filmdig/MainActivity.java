@@ -38,6 +38,25 @@ public class MainActivity extends AppCompatActivity {
 
     public static boolean startStop = false;
 
+    public static int getWindHeight() {
+        return windHeight;
+    }
+
+    public static void setWindHeight(int windHeight) {
+        MainActivity.windHeight = windHeight;
+    }
+
+    public static int getWindWidth() {
+        return windWidth;
+    }
+
+    public static void setWindWidth(int windWidth) {
+        MainActivity.windWidth = windWidth;
+    }
+
+    //Tamanhos do sensor
+    public static int windHeight, windWidth;
+
 
 
     @Override
