@@ -20,7 +20,6 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
-import android.hardware.Sensor;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -30,15 +29,17 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
-import android.hardware.camera2.params.MeteringRectangle;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Looper;
+import android.os.Message;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -64,7 +65,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -72,25 +72,51 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import static android.hardware.camera2.CameraMetadata.CONTROL_AE_ANTIBANDING_MODE_50HZ;
-import static android.hardware.camera2.CameraMetadata.CONTROL_AE_ANTIBANDING_MODE_60HZ;
-
 
 public class Camera2BasicFragment extends Fragment
         implements View.OnClickListener, ActivityCompat.OnRequestPermissionsResultCallback {
+    private Handler tirafotoAgora;
+
+    void startRepeatingTask() {
+        mStatusChecker.run();
+    }
+
+    void stopRepeatingTask() {
+        mBackgroundHandler.removeCallbacks(mStatusChecker);
+    }
+
+    private Runnable mStatusChecker = new Runnable() {
+        @Override
+        public void run() {
+            try{
+                if(MainActivity.getStartStop()==true){
+                    mFile = new File(getActivity().getExternalFilesDir(null), "pic" + MainActivity.getI() + ".jpg");
+                    if(mConnectedThread!=null) mConnectedThread.write("1");
+                    tirafotoAgora.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            takePicture();
+                            MainActivity.incrementI();
+                        }
+                    },3000);
+                } else stopRepeatingTask();
+            }
+            finally {
+                mBackgroundHandler.postDelayed(mStatusChecker, 6000);
+            }
+
+        }
+    };
+
+
 
     //Cria Rectangulo da imagem que queremos
-    //private  static final Rect centro = new Rect((MainActivity.getWindWidth()/2)-(MainActivity.getWindWidth()/6),(MainActivity.getWindHeight()/2)-(MainActivity.getWindHeight()/6),(MainActivity.getWindWidth()/2)+(MainActivity.getWindWidth()/6),(MainActivity.getWindHeight()/2)+(MainActivity.getWindHeight()/6));
-    private  static final Rect centro = new Rect(756,1080,1692,2160);
-    //Cria campo de foco e auto exposição(o não comentado não foca, sabe deus porquê... o outro funciona, sabe deus porquê)
-    //private static final MeteringRectangle[] campo = new MeteringRectangle[]{new MeteringRectangle((850,850,1000,1000,MeteringRectangle.MeteringRectangle.METERING_WEIGHT_DONT_CARE)};
-    //private static final MeteringRectangle[] campo = new MeteringRectangle[]{new MeteringRectangle((MainActivity.getWindWidth()/2)-(MainActivity.getWindWidth()/6),(MainActivity.getWindHeight()/2)-(MainActivity.getWindHeight()/6),100,100,MeteringRectangle.METERING_WEIGHT_MAX)};
+    private  static final Rect centro = new Rect(816,1088,1632,2176);
     /**
      * Conversion from screen rotation to JPEG orientation.
      */
@@ -444,6 +470,7 @@ public class Camera2BasicFragment extends Fragment
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState) {
 
+
         mBTArrayAdapter = new ArrayAdapter <String> (view.getContext(),android.R.layout.simple_list_item_1);
         mBTAdapter = BluetoothAdapter.getDefaultAdapter(); // get a handle on the bluetooth radio
 
@@ -795,7 +822,9 @@ public class Camera2BasicFragment extends Fragment
     private void startBackgroundThread() {
         mBackgroundThread = new HandlerThread("CameraBackground");
         mBackgroundThread.start();
+        tirafotoAgora = new Handler(mBackgroundThread.getLooper());
         mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
+        startRepeatingTask();
     }
 
     /**
@@ -807,6 +836,8 @@ public class Camera2BasicFragment extends Fragment
             mBackgroundThread.join();
             mBackgroundThread = null;
             mBackgroundHandler = null;
+            tirafotoAgora = null;
+            stopRepeatingTask();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -921,6 +952,7 @@ public class Camera2BasicFragment extends Fragment
      */
     private void lockFocus() {
         try {
+            mPreviewRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, centro);
             // This is how to tell the camera to lock focus.
             mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
                     CameraMetadata.CONTROL_AF_TRIGGER_START);
@@ -1039,42 +1071,14 @@ public class Camera2BasicFragment extends Fragment
     @Override
     public void onClick(View view) {
         if(view.getId() == R.id.picture){
-            if(MainActivity.getStartStop() == false){
-                digitaliza(true);
+            if(MainActivity.getStartStop()==false){
                 MainActivity.setStartStop(true);
-            }else {
+
+            }else{
                 MainActivity.setStartStop(false);
             }
-
         }
     }
-
-    private void digitaliza(boolean t) {
-        if (t == true) {
-            if (mConnectedThread != null) {
-                mConnectedThread.write("1");
-                mFile = new File(getActivity().getExternalFilesDir(null), "pic" + MainActivity.getI() + ".jpg");
-
-                mBackgroundHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        takePicture();
-                        MainActivity.incrementI();
-                        digitaliza(MainActivity.getStartStop());
-
-                    }
-                }, 5000);
-
-            }
-        }
-    }
-
-    /*private void setAutoFlash(CaptureRequest.Builder requestBuilder) {
-        if (mFlashSupported) {
-            requestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                    CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
-        }
-    }*/
 
     /**
      * Saves a JPEG {@link Image} into the specified {@link File}.
