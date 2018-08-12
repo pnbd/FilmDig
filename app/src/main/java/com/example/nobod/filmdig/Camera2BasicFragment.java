@@ -29,6 +29,7 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
+import android.hardware.camera2.params.MeteringRectangle;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
@@ -877,8 +878,8 @@ public class Camera2BasicFragment extends Fragment
                             try {
                                 //mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_ANTIBANDING_MODE, CONTROL_AE_ANTIBANDING_MODE_50HZ);
                                 mPreviewRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, centro);
-                                //mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_REGIONS, campo);
-                                //mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS, campo);
+                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_REGIONS, new MeteringRectangle[]{new MeteringRectangle(centro, MeteringRectangle.METERING_WEIGHT_MAX)});
+                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS, new MeteringRectangle[]{new MeteringRectangle(centro, MeteringRectangle.METERING_WEIGHT_MAX)});
                                 // Auto focus should be continuous for camera preview.
                                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                                         CameraMetadata.CONTROL_AF_MODE_AUTO);
@@ -1000,8 +1001,8 @@ public class Camera2BasicFragment extends Fragment
 
             //mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_ANTIBANDING_MODE, CONTROL_AE_ANTIBANDING_MODE_50HZ);
             mPreviewRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, centro);
-            //mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_REGIONS, campo);
-            //mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS, campo);
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_REGIONS, new MeteringRectangle[]{new MeteringRectangle(centro, MeteringRectangle.METERING_WEIGHT_MAX)});
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS, new MeteringRectangle[]{new MeteringRectangle(centro, MeteringRectangle.METERING_WEIGHT_MAX)});
             // Use the same AE and AF modes as the preview.
             captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                     CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
